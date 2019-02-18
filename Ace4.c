@@ -4,71 +4,87 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
-void display_prompt();
-void parse(char input[512]);
-void exCommand();
+char** parse(char input[512], char *tokenisedArray[512]);
+void exCommand(char *tokenisedArray[512]);
 
 
 int main() {
+  char *tokenisedArray[512];
+  bool userExit=false;
+  char input [512];
 
-	display_prompt();
-	exCommand();
+  do {
+    printf(">");
+    fgets(input,512,stdin);
+    parse(input, tokenisedArray);
+    exCommand(tokenisedArray);
+    if (strcmp("exit", tokenisedArray[0])){
+      break;
+    }
+  } while(userExit==false);
 
 	return 0;
 }
 
 //Display Prompt function
-void display_prompt() {
-	
-	char input[512];
-	
+// void display_prompt() {
+//
+// 	char input[512];
+//
+//
+//
+//
+// 	printf("%s", input);
+// 	parse(input);
 
-	printf(">");
-	fgets(input,512,stdin);
-	
-	printf("%s", input);	
-	parse(input);
-	
 	//if (*input=="exit") {
 	//	printf("Identical");
 	//}
 	//else {
 	//	printf("Not identical");
 	//}
-	
-}
+
+//}
 
 //Parsing input function
-void parse(char input[512]) {
+char** parse(char input[512], char *tokenisedArray[512]) {
 
+  int i=0;
 	char* token;
-	char* token2;
 	token = strtok(input, " |&<>;");
+  tokenisedArray[0] = token;
 
 	while (token != NULL) {
-		printf("%s\n", token);
+    i++;
 		token = strtok(NULL, " |&<>;");
+    tokenisedArray[i] = token;
+
 	}
+  return tokenisedArray;
 }
 
-void exCommand() {
+void exCommand(char *tokenisedArray[512]) {
 
 	pid_t pid = fork();
 	int status;
 
 	//fork returns a negative value: error has occured
-	if (pid < 0) { 
+	if (pid < 0) {
 		perror("Error");
 		exit(1);
 	}
 	//fork returns 0: the child process is running
-	else if (pid == 0) { 
-		execvp(*argv, argv);
+	else if (pid == 0) {
+    if(execvp(tokenisedArray[0],tokenisedArray) == -1 ){
+               printf("%s: Command not found\n",tokenisedArray[0]);
+      }
+      exit(2);
 	}
 	//parent process
-	else { 
-		wait(&status);
+	else {
+		waitpid(pid, &status, 0);
 		printf("Child Complete");
 	}
 
