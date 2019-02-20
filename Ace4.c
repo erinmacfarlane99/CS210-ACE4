@@ -5,87 +5,109 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 
-char** parse(char input[512], char *tokenisedArray[512]);
-void exCommand(char *tokenisedArray[512]);
+#define MAX_ARGS 50
+
+// char** parse(char input[512], char cmd[30], char *tokenisedArray[MAX_ARGS]);
+// void exCommand(char cmd[30], char *tokenisedArray[MAX_ARGS]);
 
 
 int main() {
-  char *tokenisedArray[512];
-  bool userExit=false;
-  char input [512];
+  char *tokenisedArray[MAX_ARGS];
+  char input[512];
+  char cmd[30];
+  char *delimiters = " \t\n|<>&;";
 
-  do {
-    printf(">");
-    fgets(input,512,stdin);
-    parse(input, tokenisedArray);
-    exCommand(tokenisedArray);
-    if (strcmp("exit", tokenisedArray[0])){
-      break;
+  while (1) {
+
+        printf(">");
+        fgets(input,512,stdin);
+        // tokenises input
+        int i=0;
+        char* token;
+
+        token = strtok(input, delimiters);
+        tokenisedArray[0] = token;
+        while (token != NULL) {
+          i++;
+          token = strtok(NULL, delimiters);
+          tokenisedArray[i] = token;
+
+        }
+        // end of tokenising
+        if ((strcmp("exit", tokenisedArray[0]) == 0) || getchar()==EOF) {
+            break;
+        }
+        // executes command
+        pid_t pid = fork();
+
+        //fork returns a negative value: error has occured
+        if (pid == -1) {
+          perror("Error\n");
+          exit(1);
+        }
+
+        //fork returns 0: the child process is running
+        else if (pid == 0) {
+               if(execvp(tokenisedArray[0],tokenisedArray) == -1 ){
+                     printf("%s: Command not found\n",tokenisedArray[0]);
+
+               }
+
+        }
+        //parent process
+        else {
+          int status;
+          waitpid(pid, &status, 0);
+          printf("Child Complete\n");
+        }
+      //  exCommand(cmd, tokenisedArray);
     }
-  } while(userExit==false);
 
-	return 0;
-}
-
-//Display Prompt function
-// void display_prompt() {
-//
-// 	char input[512];
-//
-//
-//
-//
-// 	printf("%s", input);
-// 	parse(input);
-
-	//if (*input=="exit") {
-	//	printf("Identical");
-	//}
-	//else {
-	//	printf("Not identical");
-	//}
-
-//}
+    return 0;
+  }
 
 //Parsing input function
-char** parse(char input[512], char *tokenisedArray[512]) {
+// char** parse(char input[512], char cmd[30], char *tokenisedArray[MAX_ARGS]) {
 
-  int i=0;
-	char* token;
-	token = strtok(input, " |&<>;");
-  tokenisedArray[0] = token;
+//   int i=0;
+// 	char* token;
+// 	token = strtok(input, " |&<>;");
+//   strcpy(cmd, token);
+//   printf("%s\n", cmd);
+// 	while (input != NULL && i<50) {
+// 		token = strtok(NULL, " |&<>;");
+//     tokenisedArray[i] = token;
+//     i++;
+// 	}
+//   return tokenisedArray;
+// }
 
-	while (token != NULL) {
-    i++;
-		token = strtok(NULL, " |&<>;");
-    tokenisedArray[i] = token;
-
-	}
-  return tokenisedArray;
-}
-
-void exCommand(char *tokenisedArray[512]) {
-
-	pid_t pid = fork();
-	int status;
-
-	//fork returns a negative value: error has occured
-	if (pid < 0) {
-		perror("Error");
-		exit(1);
-	}
-	//fork returns 0: the child process is running
-	else if (pid == 0) {
-    if(execvp(tokenisedArray[0],tokenisedArray) == -1 ){
-               printf("%s: Command not found\n",tokenisedArray[0]);
-      }
-      exit(2);
-	}
-	//parent process
-	else {
-		waitpid(pid, &status, 0);
-		printf("Child Complete");
-	}
-
-}
+// void exCommand(char cmd[30], char *tokenisedArray[MAX_ARGS]) {
+//
+// 	pid_t pid = fork();
+//
+//   printf("%s\n", cmd);
+// 	//fork returns a negative value: error has occured
+// 	if (pid == -1) {
+// 		perror("Error\n");
+//     exit(1);
+// 	}
+//
+// 	//fork returns 0: the child process is running
+// 	else if (pid == 0) {
+//          if(execvp(tokenisedArray[0],tokenisedArray) == -1 ){
+//                printf("%s: Command not found\n",tokenisedArray[0]);
+//
+//          }
+//
+// 	}
+// 	//parent process
+// 	else {
+//     int status;
+// 		waitpid(pid, &status, 0);
+// 		printf("Child Complete\n");
+// 	}
+//
+// }
