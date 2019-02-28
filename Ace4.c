@@ -13,7 +13,8 @@
 void get_path(char *tokenisedArray[MAX_ARGS]);
 void get_path(char *tokenisedArray[MAX_ARGS]);
 void exCommand(char *tokenisedArray[MAX_ARGS]);
-
+void pwd();
+void changeDir(char *tokenisedArray[MAX_ARGS]);
 
 
 int main() {
@@ -34,9 +35,17 @@ int main() {
 
   while (1) {
 
-        printf(">");
-        fgets(input,512,stdin);
-        // tokenises input
+        pwd();
+	    printf(">");
+		//fgets returns NULL if ctrl+D has been entered
+        if (fgets(input,512,stdin) == NULL){
+			break;
+		}
+        //clears token array
+		for (int x=0;x<MAX_ARGS;x++){
+			tokenisedArray[x] = NULL;
+		}
+		// tokenises input
         int i=0;
         char* token;
 
@@ -49,13 +58,9 @@ int main() {
 
         }
         // end of tokenising
-        if ((strcmp("exit", tokenisedArray[0]) == 0)) {
+		if ((strcmp("exit", tokenisedArray[0]) == 0)) {
             break;
         }
-        else if (getchar()==EOF){
-          break;
-        }
-        // executes command
 
         exCommand(tokenisedArray);
     }
@@ -66,22 +71,6 @@ int main() {
 
     return 0;
   }
-
-//Parsing input function
-// char** parse(char input[512], char cmd[30], char *tokenisedArray[MAX_ARGS]) {
-
-//   int i=0;
-// 	char* token;
-// 	token = strtok(input, " |&<>;");
-//   strcpy(cmd, token);
-//   printf("%s\n", cmd);
-// 	while (input != NULL && i<50) {
-// 		token = strtok(NULL, " |&<>;");
-//     tokenisedArray[i] = token;
-//     i++;
-// 	}
-//   return tokenisedArray;
-// }
 
 void get_path(char *tokenisedArray[MAX_ARGS]){
   if (tokenisedArray[1]!=NULL){
@@ -113,6 +102,31 @@ void set_path(char *tokenisedArray[MAX_ARGS]){
   }
 }
 
+void pwd(){
+	char cwd[512];
+	getcwd(cwd, 512);
+	printf("%s", cwd);
+}
+
+void changeDir(char *tokenisedArray[MAX_ARGS]){
+	if (tokenisedArray[2] == NULL){
+		if (tokenisedArray[1] == NULL){
+			if (chdir(getenv("HOME")) != 0){
+				perror("Error");
+			}
+		} 
+		else{
+			if (chdir(tokenisedArray[1]) != 0){
+				perror("Error");
+			}
+		}
+	}
+	else{
+		printf("cd: too many arguments\n");
+	}
+	return;
+}
+
 void exCommand(char *tokenisedArray[MAX_ARGS]) {
 
   if (strcmp("getpath", tokenisedArray[0])==0){
@@ -120,6 +134,9 @@ void exCommand(char *tokenisedArray[MAX_ARGS]) {
   }
   else if (strcmp("setpath", tokenisedArray[0])==0){
     set_path(tokenisedArray);
+  }
+  else if (strcmp("cd", tokenisedArray[0]) == 0){
+	  changeDir(tokenisedArray);
   }
   else{
     pid_t pid = fork();
@@ -143,6 +160,7 @@ void exCommand(char *tokenisedArray[MAX_ARGS]) {
   		printf("Child Complete\n");
   	}
   }
+  return;
 
 
 }
