@@ -4,7 +4,7 @@ Group project for CS210 - Computer Systems and Architecture.
 
 A simple shell implemented in C, it supports the built-in UNIX commands, history invocations and aliases.
 
-To exit the shell, run 'ctrl+d' or 'exit'.
+To exit the shell, run ```ctrl+d``` or ```exit```.
 
 ## Steps to run the simple shell:
 
